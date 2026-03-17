@@ -6,7 +6,7 @@
   <title>HSA — End of Day Report</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans pb-10">
+<body class="bg-gray-100 min-h-screen font-sans">
 
   <!-- Header -->
   <div class="bg-[#1E3A5F] text-white px-4 py-4 sticky top-0 z-10 shadow-md">
@@ -36,8 +36,6 @@
   <!-- Form -->
   <form id="eod-form" class="max-w-lg mx-auto px-4 py-6 space-y-6" novalidate>
 
-    <input type="hidden" id="submitter_ref" name="submitter_ref" value="Unknown User">
-
     <!-- SOD Summary Banner -->
     <div id="sod-banner" class="bg-[#1E3A5F]/10 border border-[#1E3A5F]/30 rounded-xl p-4">
       <p class="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider mb-1">Today's SOD on File</p>
@@ -46,21 +44,61 @@
       </div>
     </div>
 
-    <!-- DYNAMIC SITE BLOCKS WILL BE INJECTED HERE -->
-    <div id="dynamic-sites-container" class="space-y-6">
-       <!-- JS fills this -->
-    </div>
-
-    <!-- Narrative Notes (Optional) -->
+    <!-- Work Type -->
     <div class="bg-white rounded-xl shadow-sm p-4">
-      <label for="narrative_notes" class="block text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Day Notes (Optional)</label>
-      <textarea id="narrative_notes" name="narrative_notes" rows="2" placeholder="Any general notes about the day..."
-        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] resize-none"></textarea>
+      <label class="block text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Work Type</label>
+      <select id="work_type" name="work_type" required
+        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]">
+        <option value="">Select work type performed...</option>
+      </select>
     </div>
 
-    <!-- Equipment Issue Global -->
-    <div class="bg-white rounded-xl shadow-sm p-4 border-2 border-red-100">
-      <label class="block text-xs font-semibold text-red-600 uppercase tracking-wider mb-3">Equipment Issue Today?</label>
+    <!-- Units Completed -->
+    <div class="bg-white rounded-xl shadow-sm p-4">
+      <label for="units_completed" class="block text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Units Completed</label>
+      <input type="number" id="units_completed" name="units_completed" min="0" step="1" required
+        placeholder="e.g. 12"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
+      <p class="text-xs text-gray-400 mt-1">Total borings / pits / units completed across all sites.</p>
+    </div>
+
+    <!-- Hours Spent -->
+    <div class="bg-white rounded-xl shadow-sm p-4">
+      <label for="hours_spent" class="block text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Hours on Site</label>
+      <input type="number" id="hours_spent" name="hours_spent" min="0" max="24" step="0.5" required
+        placeholder="e.g. 8.5"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
+      <p class="text-xs text-gray-400 mt-1">Total hours worked on site today.</p>
+    </div>
+
+    <!-- Delay Category -->
+    <div class="bg-white rounded-xl shadow-sm p-4">
+      <label class="block text-xs font-semibold text-amber-600 uppercase tracking-wider mb-3">Delay Category</label>
+      <div class="grid grid-cols-2 gap-2">
+        <label><input type="radio" name="delay_category" value="None" class="sr-only peer" required />
+          <div class="peer-checked:bg-[#1E3A5F] peer-checked:text-white peer-checked:border-[#1E3A5F] border-2 border-gray-300 rounded-lg py-2.5 text-center text-sm font-medium text-gray-600 cursor-pointer transition-all">✅ None</div>
+        </label>
+        <label><input type="radio" name="delay_category" value="Weather" class="sr-only peer" />
+          <div class="peer-checked:bg-[#1E3A5F] peer-checked:text-white peer-checked:border-[#1E3A5F] border-2 border-gray-300 rounded-lg py-2.5 text-center text-sm font-medium text-gray-600 cursor-pointer transition-all">🌧️ Weather</div>
+        </label>
+        <label><input type="radio" name="delay_category" value="Equipment" class="sr-only peer" />
+          <div class="peer-checked:bg-[#1E3A5F] peer-checked:text-white peer-checked:border-[#1E3A5F] border-2 border-gray-300 rounded-lg py-2.5 text-center text-sm font-medium text-gray-600 cursor-pointer transition-all">🔧 Equipment</div>
+        </label>
+        <label><input type="radio" name="delay_category" value="Permit" class="sr-only peer" />
+          <div class="peer-checked:bg-[#1E3A5F] peer-checked:text-white peer-checked:border-[#1E3A5F] border-2 border-gray-300 rounded-lg py-2.5 text-center text-sm font-medium text-gray-600 cursor-pointer transition-all">📋 Permit</div>
+        </label>
+        <label><input type="radio" name="delay_category" value="Traffic" class="sr-only peer" />
+          <div class="peer-checked:bg-[#1E3A5F] peer-checked:text-white peer-checked:border-[#1E3A5F] border-2 border-gray-300 rounded-lg py-2.5 text-center text-sm font-medium text-gray-600 cursor-pointer transition-all">🚗 Traffic</div>
+        </label>
+        <label><input type="radio" name="delay_category" value="Other" class="sr-only peer" />
+          <div class="peer-checked:bg-[#1E3A5F] peer-checked:text-white peer-checked:border-[#1E3A5F] border-2 border-gray-300 rounded-lg py-2.5 text-center text-sm font-medium text-gray-600 cursor-pointer transition-all">❓ Other</div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Equipment Issue -->
+    <div class="bg-white rounded-xl shadow-sm p-4">
+      <label class="block text-xs font-semibold text-amber-600 uppercase tracking-wider mb-3">Equipment Issue Today?</label>
       <div class="flex gap-3 mb-4">
         <label class="flex-1">
           <input type="radio" name="equipment_issue_yn" value="YES" id="eq-yes" class="sr-only peer" />
@@ -76,11 +114,11 @@
         </label>
       </div>
 
-      <!-- Equipment detail fields -->
+      <!-- Equipment detail fields (shown only if YES) -->
       <div id="eq-detail" class="hidden space-y-3 border-t border-gray-100 pt-3">
         <div>
           <label for="issue_rig_id" class="block text-xs font-medium text-gray-600 mb-1">Equipment ID</label>
-          <input type="text" id="issue_rig_id" name="issue_rig_id" placeholder="e.g. 104"
+          <input type="text" id="issue_rig_id" name="issue_rig_id" placeholder="e.g. A-003"
             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
         </div>
         <div>
@@ -93,11 +131,11 @@
 
     <!-- Submit -->
     <button type="submit" id="submit-btn"
-      class="w-full bg-[#1E3A5F] text-white font-bold py-4 rounded-xl text-base shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-      <span id="btn-text">Submit EOD Report</span>
+      class="w-full bg-[#1E3A5F] text-white font-bold py-4 rounded-xl text-base shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
+      Submit EOD Report
     </button>
 
-    <p class="text-center text-xs text-gray-400 pb-4 mt-4">HSA Drilling & Excavation · Field Operations</p>
+    <p class="text-center text-xs text-gray-400 pb-4">HSA Drilling & Excavation · Field Operations</p>
   </form>
 
 <script>
@@ -106,16 +144,6 @@ const EOD_ENDPOINT = 'https://n8n.srv1498466.hstgr.cloud/webhook/hsa-eod';
 
 const params = new URLSearchParams(window.location.search);
 const CHAT_ID = params.get('chat_id') || '';
-
-// Hardcoded map to resolve chat_id to submitter_ref
-const USER_MAP = {
-  "123456789": "Prasad Badgujar", 
-  "987654321": "Harish"
-};
-
-// Global variables to hold data
-let globalWorkTypes = [];
-let siteIdsArray = [];
 
 async function fetchData(type, extra = '') {
   const res = await fetch(`${API_BASE}?type=${type}${extra}`);
@@ -129,7 +157,7 @@ function showError(msg) {
   const el = document.getElementById('error-banner');
   el.textContent = msg;
   el.classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Equipment issue toggle
@@ -142,99 +170,34 @@ document.getElementById('eq-no').addEventListener('change', () => {
   document.getElementById('issue_note').value = '';
 });
 
-// Helper to generate the HTML for a single site block
-function generateSiteBlock(siteId, workTypes, index) {
-  const wtOptions = workTypes.map(w => `<option value="${w.work_type}">${w.work_type}</option>`).join('');
-  
-  return `
-    <div class="bg-white rounded-xl shadow-md border-l-4 border-[#1E3A5F] p-4 site-block" data-site-id="${siteId}">
-      <h3 class="font-bold text-[#1E3A5F] mb-3 flex items-center gap-2">
-        <span class="bg-gray-200 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center text-xs">${index + 1}</span>
-        Site: ${siteId}
-      </h3>
-      
-      <div class="space-y-4">
-        <!-- Work Type -->
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Work Type</label>
-          <select name="work_type_${siteId}" class="site-work-type w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1E3A5F]" required>
-            <option value="">Select...</option>
-            ${wtOptions}
-          </select>
-        </div>
-        
-        <!-- Units & Hours -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Units Done</label>
-            <input type="number" name="units_${siteId}" class="site-units w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" min="0" step="1" required placeholder="e.g. 1" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Hours Spent</label>
-            <input type="number" name="hours_${siteId}" class="site-hours w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" min="0" max="24" step="0.5" required placeholder="e.g. 4.5" />
-          </div>
-        </div>
-
-        <!-- Delay Category -->
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Delay Category</label>
-          <select name="delay_${siteId}" class="site-delay w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1E3A5F]" required>
-            <option value="None">✅ None</option>
-            <option value="Weather">🌧️ Weather</option>
-            <option value="Equipment">🔧 Equipment</option>
-            <option value="Permit">📋 Permit</option>
-            <option value="Traffic">🚗 Traffic</option>
-            <option value="Other">❓ Other</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 async function init() {
-  const submitterName = USER_MAP[CHAT_ID] || "Unknown User";
-  document.getElementById('submitter_ref').value = submitterName;
-
   try {
     const chatParam = CHAT_ID ? `&chat_id=${encodeURIComponent(CHAT_ID)}` : '';
-    // IMPORTANT: Wait for both fetches to complete
-    const results = await Promise.all([
+    const [workTypes, todaySod] = await Promise.all([
       fetchData('work_types'),
       fetchData('today_sod', chatParam)
     ]);
-    
-    globalWorkTypes = results[0];
-    const todaySod = results[1];
 
-    // Check if SOD returned an array (n8n returns an array of objects)
-    const sodData = Array.isArray(todaySod) ? todaySod[0] : todaySod;
+    // Populate work types
+    const wtSel = document.getElementById('work_type');
+    workTypes.forEach(w => {
+      const opt = document.createElement('option');
+      opt.value = w.work_type;
+      opt.textContent = w.work_type;
+      wtSel.appendChild(opt);
+    });
 
+    // Show SOD info
     const sodInfo = document.getElementById('sod-info');
-    const container = document.getElementById('dynamic-sites-container');
-
-    if (sodData && sodData.found) {
+    if (todaySod.found) {
       sodInfo.innerHTML = `
-        <p><span class="font-semibold">SOD ID:</span> ${sodData.sod_id}</p>
-        <p><span class="font-semibold">Project:</span> ${sodData.p_id}</p>
-        <p><span class="font-semibold">Rig:</span> ${sodData.rig_id || 'N/A'}</p>
+        <p><span class="font-semibold">SOD ID:</span> ${todaySod.sod_id}</p>
+        <p><span class="font-semibold">Project:</span> ${todaySod.p_id}</p>
+        <p><span class="font-semibold">Sites:</span> ${todaySod.site_ids || 'N/A'}</p>
+        <p><span class="font-semibold">Rig:</span> ${todaySod.rig_id || 'N/A'}</p>
       `;
-
-      // Split the sites from the SOD and generate blocks
-      if (sodData.site_ids) {
-        siteIdsArray = sodData.site_ids.split(',').map(s => s.trim()).filter(s => s);
-        
-        let htmlBlocks = '';
-        siteIdsArray.forEach((siteId, index) => {
-          htmlBlocks += generateSiteBlock(siteId, globalWorkTypes, index);
-        });
-        container.innerHTML = htmlBlocks;
-      } else {
-         container.innerHTML = `<p class="text-red-600 text-sm">No sites found in today's SOD.</p>`;
-      }
-
     } else {
-      sodInfo.innerHTML = `<p class="text-red-600 font-medium">⚠️ ${sodData.message || 'No SOD found for today.'}</p>`;
+      sodInfo.innerHTML = `<p class="text-red-600 font-medium">⚠️ ${todaySod.message || 'No SOD found for today.'}</p>`;
       document.getElementById('submit-btn').disabled = true;
     }
 
@@ -242,84 +205,41 @@ async function init() {
   } catch (e) {
     document.getElementById('loading-overlay').classList.add('hidden');
     showError('Failed to load form data. Check your connection and reload.');
-    console.error(e);
   }
-}
-
-// GPS Helper
-function getGPS() {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) resolve(""); 
-    else {
-      navigator.geolocation.getCurrentPosition(
-        (position) => resolve(`${position.coords.latitude}, ${position.coords.longitude}`),
-        (error) => resolve("") 
-      );
-    }
-  });
 }
 
 document.getElementById('eod-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = document.getElementById('submit-btn');
-  const btnText = document.getElementById('btn-text');
-  document.getElementById('error-banner').classList.add('hidden');
 
-  // Collect Global Data
+  const work_type = document.getElementById('work_type').value.trim();
+  const units_completed = parseFloat(document.getElementById('units_completed').value);
+  const hours_spent = parseFloat(document.getElementById('hours_spent').value);
+  const delay_category = (document.querySelector('input[name="delay_category"]:checked') || {}).value || '';
   const eq_yn = (document.querySelector('input[name="equipment_issue_yn"]:checked') || {}).value || 'NO';
   const equipment_issue = eq_yn === 'YES';
   const issue_rig_id = document.getElementById('issue_rig_id').value.trim();
   const issue_note = document.getElementById('issue_note').value.trim();
-  const narrative_notes = document.getElementById('narrative_notes').value.trim();
-  const submitter_ref = document.getElementById('submitter_ref').value;
 
+  if (!work_type) return showError('Please select a work type.');
+  if (isNaN(units_completed) || units_completed < 0) return showError('Please enter a valid number of units.');
+  if (isNaN(hours_spent) || hours_spent <= 0) return showError('Please enter valid hours spent.');
+  if (!delay_category) return showError('Please select a delay category.');
   if (equipment_issue && !issue_rig_id) return showError('Please enter the equipment ID for the issue.');
 
-  // Collect Data from Dynamic Site Blocks
-  let sitesData = [];
-  let validationError = false;
-
-  document.querySelectorAll('.site-block').forEach(block => {
-    const site_id = block.getAttribute('data-site-id');
-    const work_type = block.querySelector('.site-work-type').value;
-    const units = parseFloat(block.querySelector('.site-units').value);
-    const hours = parseFloat(block.querySelector('.site-hours').value);
-    const delay = block.querySelector('.site-delay').value;
-
-    if (!work_type || isNaN(units) || isNaN(hours)) {
-      validationError = true;
-    }
-
-    sitesData.push({
-      s_id: site_id,
-      work_type: work_type,
-      units_completed: units,
-      hours_spent: hours,
-      delay_category: delay
-    });
-  });
-
-  if (validationError) {
-    return showError('Please complete all required fields for every site.');
-  }
-
+  document.getElementById('error-banner').classList.add('hidden');
   btn.disabled = true;
-  btnText.textContent = 'Getting Location...';
+  btn.textContent = 'Submitting...';
 
-  const submission_gps = await getGPS();
-
-  btnText.textContent = 'Submitting...';
-
-  // The final payload packages everything together
   const payload = {
     chat_id: CHAT_ID,
-    submitter_ref,
-    submission_gps,
+    work_type,
+    units_completed,
+    hours_spent,
+    delay_category,
     equipment_issue,
     issue_rig_id: equipment_issue ? issue_rig_id : '',
-    issue_note: equipment_issue ? issue_note : '',
-    narrative_notes,
-    sites_data: sitesData // This is an array of objects
+    issue_note: equipment_issue ? issue_note : ''
   };
 
   try {
@@ -331,11 +251,12 @@ document.getElementById('eod-form').addEventListener('submit', async (e) => {
 
     if (!res.ok) throw new Error(`Server error ${res.status}`);
 
-    document.getElementById('success-msg').textContent = `Successfully logged data for ${sitesData.length} site(s).`;
+    document.getElementById('success-msg').textContent =
+      `${work_type} | ${units_completed} units | ${hours_spent}h | Delay: ${delay_category}${equipment_issue ? ' | ⚠️ Equipment issue flagged' : ''}`;
     document.getElementById('success-screen').classList.remove('hidden');
   } catch (err) {
     btn.disabled = false;
-    btnText.textContent = 'Submit EOD Report';
+    btn.textContent = 'Submit EOD Report';
     showError(`Submission failed: ${err.message}. Please try again.`);
   }
 });
