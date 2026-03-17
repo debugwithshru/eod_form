@@ -148,7 +148,9 @@ const CHAT_ID = params.get('chat_id') || '';
 async function fetchData(type, extra = '') {
   const res = await fetch(`${API_BASE}?type=${type}${extra}`);
   if (!res.ok) throw new Error(`Failed to load ${type}`);
-  return res.json();
+  const text = await res.text();
+  if (!text || !text.trim()) return [];
+  return JSON.parse(text);
 }
 
 function showError(msg) {
