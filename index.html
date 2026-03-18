@@ -5,17 +5,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HSA — End of Day Report</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+    * { font-family: 'DM Sans', sans-serif; }
+    .mono { font-family: 'DM Mono', monospace; }
+
+    #draft-banner {
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    #draft-banner.hidden { opacity: 0; transform: translateY(-12px); pointer-events: none; }
+    #draft-banner.visible { opacity: 1; transform: translateY(0); }
+
+    .syncing-dot { animation: pulse 1.2s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans pb-10">
+<body class="bg-slate-100 min-h-screen pb-10">
 
   <!-- Header -->
-  <div class="bg-[#1E3A5F] text-white px-4 py-4 sticky top-0 z-10 shadow-md">
-    <p class="text-xs text-amber-400 font-semibold tracking-widest uppercase">HSA Drilling & Excavation</p>
-    <h1 class="text-xl font-bold mt-0.5">End of Day Report</h1>
+  <div class="bg-[#1E3A5F] text-white px-4 py-4 sticky top-0 z-20 shadow-lg">
+    <div class="max-w-lg mx-auto flex items-center justify-between">
+      <div>
+        <p class="text-xs text-amber-400 font-semibold tracking-widest uppercase mono">HSA Drilling & Excavation</p>
+        <h1 class="text-xl font-bold mt-0.5">End of Day Report</h1>
+      </div>
+      <div id="network-badge" class="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-white/10">
+        <span id="net-dot" class="w-2 h-2 rounded-full bg-green-400"></span>
+        <span id="net-label">Online</span>
+      </div>
+    </div>
   </div>
 
-  <!-- Loading overlay -->
-  <div id="loading-overlay" class="fixed inset-0 bg-white/80 flex items-center justify-center z-50">
+  <!-- Draft Restored Banner -->
+  <div id="draft-banner" class="hidden max-w-lg mx-auto px-4 pt-4">
+    <div class="bg-amber-50 border border-amber-300 rounded-xl p-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="text-lg">📝</span>
+        <div>
+          <p class="text-sm font-semibold text-amber-800">Draft restored</p>
+          <p class="text-xs text-amber-600">Your previous form data has been loaded. Review and submit when ready.</p>
+        </div>
+      </div>
+      <button id="clear-draft-btn" class="text-xs text-amber-700 underline whitespace-nowrap">Clear draft</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-overlay" class="fixed inset-0 bg-white/90 flex items-center justify-center z-50">
     <div class="text-center">
       <div class="inline-block w-10 h-10 border-4 border-[#1E3A5F] border-t-transparent rounded-full animate-spin"></div>
       <p class="mt-3 text-gray-600 text-sm">Loading today's data...</p>
@@ -23,100 +62,227 @@
   </div>
 
   <!-- Error banner -->
-  <div id="error-banner" class="hidden bg-red-50 border-l-4 border-red-500 mx-4 mt-4 p-3 rounded text-sm text-red-700"></div>
+  <div id="error-banner" class="hidden max-w-lg mx-auto px-4 mt-4">
+    <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded text-sm text-red-700"></div>
+  </div>
+
+  <!-- Offline queue banner -->
+  <div id="offline-queue-banner" class="hidden max-w-lg mx-auto px-4 mt-4">
+    <div class="bg-blue-50 border border-blue-300 rounded-xl p-3 flex items-center gap-2">
+      <span class="syncing-dot w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0"></span>
+      <p class="text-sm text-blue-700">Submission saved offline. Will send automatically when back online.</p>
+    </div>
+  </div>
 
   <!-- Success screen -->
   <div id="success-screen" class="hidden fixed inset-0 bg-white flex flex-col items-center justify-center p-6 z-50">
     <div class="text-6xl mb-4">✅</div>
     <h2 class="text-2xl font-bold text-[#1E3A5F] mb-2">EOD Filed!</h2>
-    <p id="success-msg" class="text-gray-600 text-center mb-6"></p>
-    <p class="text-sm text-gray-400">You can close this window.</p>
+    <p id="success-msg" class="text-gray-600 text-center mb-6 text-sm"></p>
+    <p class="text-sm text-gray-400">A confirmation email has been sent. You can close this window.</p>
   </div>
 
   <!-- Form -->
-  <form id="eod-form" class="max-w-lg mx-auto px-4 py-6 space-y-6" novalidate>
+  <form id="eod-form" class="max-w-lg mx-auto px-4 py-6 space-y-5" novalidate>
 
     <input type="hidden" id="submitter_ref" name="submitter_ref" value="Unknown User">
 
-    <!-- SOD Summary Banner -->
-    <div id="sod-banner" class="bg-[#1E3A5F]/10 border border-[#1E3A5F]/30 rounded-xl p-4">
-      <p class="text-xs font-semibold text-[#1E3A5F] uppercase tracking-wider mb-1">Today's SOD on File</p>
+    <!-- SOD Banner -->
+    <div class="bg-[#1E3A5F]/10 border border-[#1E3A5F]/20 rounded-2xl p-4">
+      <p class="text-xs font-bold text-[#1E3A5F] uppercase tracking-wider mb-2">Today's SOD on File</p>
       <div id="sod-info" class="text-sm text-gray-700 space-y-0.5">
         <p class="text-gray-400 italic">Loading...</p>
       </div>
     </div>
 
-    <!-- DYNAMIC SITE BLOCKS WILL BE INJECTED HERE -->
-    <div id="dynamic-sites-container" class="space-y-6">
-       <!-- JS fills this -->
-    </div>
+    <!-- Dynamic site blocks injected here -->
+    <div id="dynamic-sites-container" class="space-y-5"></div>
 
-    <!-- Narrative Notes (Optional) -->
-    <div class="bg-white rounded-xl shadow-sm p-4">
-      <label for="narrative_notes" class="block text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Day Notes (Optional)</label>
+    <!-- Narrative Notes -->
+    <div class="bg-white rounded-2xl shadow-sm p-4">
+      <label for="narrative_notes" class="block text-xs font-bold text-amber-600 uppercase tracking-wider mb-2.5">Day Notes (Optional)</label>
       <textarea id="narrative_notes" name="narrative_notes" rows="2" placeholder="Any general notes about the day..."
-        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] resize-none"></textarea>
+        class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] resize-none bg-slate-50"></textarea>
     </div>
 
-    <!-- Equipment Issue Global -->
-    <div class="bg-white rounded-xl shadow-sm p-4 border-2 border-red-100">
-      <label class="block text-xs font-semibold text-red-600 uppercase tracking-wider mb-3">Equipment Issue Today?</label>
+    <!-- Equipment Issue -->
+    <div class="bg-white rounded-2xl shadow-sm p-4 border-2 border-red-100">
+      <label class="block text-xs font-bold text-red-600 uppercase tracking-wider mb-3">Equipment Issue Today?</label>
       <div class="flex gap-3 mb-4">
         <label class="flex-1">
           <input type="radio" name="equipment_issue_yn" value="YES" id="eq-yes" class="sr-only peer" />
-          <div class="peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 border-2 border-gray-300 rounded-lg py-3 text-center text-sm font-semibold text-gray-600 cursor-pointer transition-all">
-            ⚠️ YES
-          </div>
+          <div class="peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 border-2 border-gray-200 rounded-xl py-3 text-center text-sm font-semibold text-gray-600 cursor-pointer transition-all">⚠️ YES</div>
         </label>
         <label class="flex-1">
           <input type="radio" name="equipment_issue_yn" value="NO" id="eq-no" class="sr-only peer" checked />
-          <div class="peer-checked:bg-green-600 peer-checked:text-white peer-checked:border-green-600 border-2 border-gray-300 rounded-lg py-3 text-center text-sm font-semibold text-gray-600 cursor-pointer transition-all">
-            ✅ NO
-          </div>
+          <div class="peer-checked:bg-green-600 peer-checked:text-white peer-checked:border-green-600 border-2 border-gray-200 rounded-xl py-3 text-center text-sm font-semibold text-gray-600 cursor-pointer transition-all">✅ NO</div>
         </label>
       </div>
-
-      <!-- Equipment detail fields -->
       <div id="eq-detail" class="hidden space-y-3 border-t border-gray-100 pt-3">
         <div>
-          <label for="issue_rig_id" class="block text-xs font-medium text-gray-600 mb-1">Equipment ID</label>
-          <input type="text" id="issue_rig_id" name="issue_rig_id" placeholder="e.g. 104"
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+          <label class="block text-xs font-medium text-gray-600 mb-1">Equipment ID</label>
+          <input type="text" id="issue_rig_id" name="issue_rig_id" placeholder="e.g. RIG-104"
+            class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-slate-50" />
         </div>
         <div>
-          <label for="issue_note" class="block text-xs font-medium text-gray-600 mb-1">Describe the Issue</label>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Describe the Issue</label>
           <textarea id="issue_note" name="issue_note" rows="3" placeholder="Describe what happened..."
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"></textarea>
+            class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none bg-slate-50"></textarea>
         </div>
       </div>
     </div>
 
     <!-- Submit -->
     <button type="submit" id="submit-btn"
-      class="w-full bg-[#1E3A5F] text-white font-bold py-4 rounded-xl text-base shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+      class="w-full bg-[#1E3A5F] text-white font-bold py-4 rounded-2xl text-base shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
       <span id="btn-text">Submit EOD Report</span>
     </button>
 
-    <p class="text-center text-xs text-gray-400 pb-4 mt-4">HSA Drilling & Excavation · Field Operations</p>
+    <p class="text-center text-xs text-gray-400 pb-4 mono">HSA Drilling & Excavation · Field Operations</p>
   </form>
 
 <script>
 const API_BASE = 'https://n8n.srv1498466.hstgr.cloud/webhook/hsa-form-data';
 const EOD_ENDPOINT = 'https://n8n.srv1498466.hstgr.cloud/webhook/hsa-eod';
+const DRAFT_KEY = 'hsa_eod_draft';
+const QUEUE_KEY = 'hsa_eod_queue';
+const CONFIRM_EMAIL = 'n8nwithshru@gmail.com';
 
 const params = new URLSearchParams(window.location.search);
 const CHAT_ID = params.get('chat_id') || '';
+const USER_MAP = { "123456789": "Prasad Badgujar", "987654321": "Harish" };
 
-// Hardcoded map to resolve chat_id to submitter_ref
-const USER_MAP = {
-  "123456789": "Prasad Badgujar", 
-  "987654321": "Harish"
-};
-
-// Global variables to hold data
+let isOnline = navigator.onLine;
 let globalWorkTypes = [];
 let siteIdsArray = [];
 
+// ─── Network Monitor ───────────────────────────────────────────────────────────
+function updateNetworkUI() {
+  const dot = document.getElementById('net-dot');
+  const label = document.getElementById('net-label');
+  if (isOnline) {
+    dot.className = 'w-2 h-2 rounded-full bg-green-400';
+    label.textContent = 'Online';
+  } else {
+    dot.className = 'w-2 h-2 rounded-full bg-red-400';
+    label.textContent = 'Offline';
+  }
+}
+
+window.addEventListener('online', () => { isOnline = true; updateNetworkUI(); flushQueue(); });
+window.addEventListener('offline', () => { isOnline = false; updateNetworkUI(); });
+
+// ─── Draft System ──────────────────────────────────────────────────────────────
+function saveDraft() {
+  const sites = {};
+  document.querySelectorAll('.site-block').forEach(block => {
+    const id = block.getAttribute('data-site-id');
+    sites[id] = {
+      work_type: block.querySelector('.site-work-type').value,
+      units: block.querySelector('.site-units').value,
+      hours: block.querySelector('.site-hours').value,
+      delay: block.querySelector('.site-delay').value
+    };
+  });
+
+  const draft = {
+    sites,
+    narrative_notes: document.getElementById('narrative_notes').value,
+    equipment_issue: (document.querySelector('input[name="equipment_issue_yn"]:checked') || {}).value || 'NO',
+    issue_rig_id: document.getElementById('issue_rig_id').value,
+    issue_note: document.getElementById('issue_note').value,
+    timestamp: Date.now()
+  };
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+}
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+
+function clearDraft() {
+  localStorage.removeItem(DRAFT_KEY);
+  const banner = document.getElementById('draft-banner');
+  banner.classList.remove('visible');
+  banner.classList.add('hidden');
+}
+
+function applyDraft(draft) {
+  if (!draft) return;
+  let restored = false;
+
+  // Site data
+  if (draft.sites) {
+    Object.entries(draft.sites).forEach(([siteId, data]) => {
+      const block = document.querySelector(`.site-block[data-site-id="${siteId}"]`);
+      if (!block) return;
+      const wtSel = block.querySelector('.site-work-type');
+      if (data.work_type && wtSel.querySelector(`option[value="${data.work_type}"]`)) {
+        wtSel.value = data.work_type;
+        restored = true;
+      }
+      const unitsEl = block.querySelector('.site-units');
+      if (data.units) { unitsEl.value = data.units; restored = true; }
+      const hoursEl = block.querySelector('.site-hours');
+      if (data.hours) { hoursEl.value = data.hours; restored = true; }
+      const delayEl = block.querySelector('.site-delay');
+      if (data.delay) { delayEl.value = data.delay; restored = true; }
+    });
+  }
+
+  // Narrative
+  if (draft.narrative_notes) {
+    document.getElementById('narrative_notes').value = draft.narrative_notes;
+    restored = true;
+  }
+
+  // Equipment issue
+  if (draft.equipment_issue === 'YES') {
+    document.getElementById('eq-yes').checked = true;
+    document.getElementById('eq-detail').classList.remove('hidden');
+    if (draft.issue_rig_id) document.getElementById('issue_rig_id').value = draft.issue_rig_id;
+    if (draft.issue_note) document.getElementById('issue_note').value = draft.issue_note;
+    restored = true;
+  }
+
+  if (restored) {
+    const banner = document.getElementById('draft-banner');
+    banner.classList.remove('hidden');
+    setTimeout(() => banner.classList.add('visible'), 50);
+  }
+}
+
+// ─── Offline Queue ─────────────────────────────────────────────────────────────
+function queuePayload(payload) {
+  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+  queue.push({ payload, timestamp: Date.now() });
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+  document.getElementById('offline-queue-banner').classList.remove('hidden');
+}
+
+async function flushQueue() {
+  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+  if (!queue.length) return;
+  const remaining = [];
+  for (const item of queue) {
+    try {
+      const res = await fetch(EOD_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item.payload)
+      });
+      if (!res.ok) remaining.push(item);
+    } catch { remaining.push(item); }
+  }
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining));
+  if (!remaining.length) document.getElementById('offline-queue-banner').classList.add('hidden');
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 async function fetchData(type, extra = '') {
   const res = await fetch(`${API_BASE}?type=${type}${extra}`);
   if (!res.ok) throw new Error(`Failed to load ${type}`);
@@ -127,58 +293,39 @@ async function fetchData(type, extra = '') {
 
 function showError(msg) {
   const el = document.getElementById('error-banner');
-  el.textContent = msg;
+  el.querySelector('div').textContent = msg;
   el.classList.remove('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Equipment issue toggle
-document.getElementById('eq-yes').addEventListener('change', () => {
-  document.getElementById('eq-detail').classList.remove('hidden');
-});
-document.getElementById('eq-no').addEventListener('change', () => {
-  document.getElementById('eq-detail').classList.add('hidden');
-  document.getElementById('issue_rig_id').value = '';
-  document.getElementById('issue_note').value = '';
-});
-
-// Helper to generate the HTML for a single site block
 function generateSiteBlock(siteId, workTypes, index) {
   const wtOptions = workTypes.map(w => `<option value="${w.work_type}">${w.work_type}</option>`).join('');
-  
   return `
-    <div class="bg-white rounded-xl shadow-md border-l-4 border-[#1E3A5F] p-4 site-block" data-site-id="${siteId}">
-      <h3 class="font-bold text-[#1E3A5F] mb-3 flex items-center gap-2">
-        <span class="bg-gray-200 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center text-xs">${index + 1}</span>
-        Site: ${siteId}
+    <div class="bg-white rounded-2xl shadow-sm border-l-4 border-[#1E3A5F] p-4 site-block" data-site-id="${siteId}">
+      <h3 class="font-bold text-[#1E3A5F] mb-3 flex items-center gap-2 text-sm">
+        <span class="bg-[#1E3A5F] text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">${index + 1}</span>
+        <span class="mono">${siteId}</span>
       </h3>
-      
-      <div class="space-y-4">
-        <!-- Work Type -->
+      <div class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Work Type</label>
-          <select name="work_type_${siteId}" class="site-work-type w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1E3A5F]" required>
-            <option value="">Select...</option>
-            ${wtOptions}
+          <select class="site-work-type w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-[#1E3A5F] bg-slate-50" required>
+            <option value="">Select...</option>${wtOptions}
           </select>
         </div>
-        
-        <!-- Units & Hours -->
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Units Done</label>
-            <input type="number" name="units_${siteId}" class="site-units w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" min="0" step="1" required placeholder="e.g. 1" />
+            <input type="number" class="site-units w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-slate-50" min="0" step="1" required placeholder="e.g. 1" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Hours Spent</label>
-            <input type="number" name="hours_${siteId}" class="site-hours w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" min="0" max="24" step="0.5" required placeholder="e.g. 4.5" />
+            <input type="number" class="site-hours w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-slate-50" min="0" max="24" step="0.5" required placeholder="e.g. 4.5" />
           </div>
         </div>
-
-        <!-- Delay Category -->
         <div>
           <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Delay Category</label>
-          <select name="delay_${siteId}" class="site-delay w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1E3A5F]" required>
+          <select class="site-delay w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-slate-50">
             <option value="None">✅ None</option>
             <option value="Weather">🌧️ Weather</option>
             <option value="Equipment">🔧 Equipment</option>
@@ -188,84 +335,109 @@ function generateSiteBlock(siteId, workTypes, index) {
           </select>
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
+function wireAutoSave() {
+  document.querySelectorAll('.site-block input, .site-block select').forEach(el => {
+    el.addEventListener('change', saveDraft);
+    el.addEventListener('input', saveDraft);
+  });
+  document.getElementById('narrative_notes').addEventListener('input', saveDraft);
+}
+
+function getGPS() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) return resolve('');
+    navigator.geolocation.getCurrentPosition(
+      p => resolve(`${p.coords.latitude}, ${p.coords.longitude}`),
+      () => resolve('')
+    );
+  });
+}
+
+// ─── Equipment toggle ──────────────────────────────────────────────────────────
+document.getElementById('eq-yes').addEventListener('change', () => {
+  document.getElementById('eq-detail').classList.remove('hidden');
+  saveDraft();
+});
+document.getElementById('eq-no').addEventListener('change', () => {
+  document.getElementById('eq-detail').classList.add('hidden');
+  document.getElementById('issue_rig_id').value = '';
+  document.getElementById('issue_note').value = '';
+  saveDraft();
+});
+document.getElementById('issue_rig_id').addEventListener('input', saveDraft);
+document.getElementById('issue_note').addEventListener('input', saveDraft);
+
+// Clear draft button
+document.getElementById('clear-draft-btn').addEventListener('click', () => {
+  clearDraft();
+  document.querySelectorAll('.site-block input, .site-block select').forEach(el => {
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+  document.getElementById('narrative_notes').value = '';
+  document.getElementById('eq-no').checked = true;
+  document.getElementById('eq-detail').classList.add('hidden');
+});
+
+// ─── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
-  const submitterName = USER_MAP[CHAT_ID] || "Unknown User";
+  const submitterName = USER_MAP[CHAT_ID] || 'Unknown User';
   document.getElementById('submitter_ref').value = submitterName;
+
+  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+  if (queue.length) document.getElementById('offline-queue-banner').classList.remove('hidden');
+
+  const draft = loadDraft();
 
   try {
     const chatParam = CHAT_ID ? `&chat_id=${encodeURIComponent(CHAT_ID)}` : '';
-    // IMPORTANT: Wait for both fetches to complete
-    const results = await Promise.all([
+    const [workTypes, todaySod] = await Promise.all([
       fetchData('work_types'),
       fetchData('today_sod', chatParam)
     ]);
-    
-    globalWorkTypes = results[0];
-    const todaySod = results[1];
 
-    // Check if SOD returned an array (n8n returns an array of objects)
+    globalWorkTypes = workTypes;
     const sodData = Array.isArray(todaySod) ? todaySod[0] : todaySod;
-
     const sodInfo = document.getElementById('sod-info');
     const container = document.getElementById('dynamic-sites-container');
 
     if (sodData && sodData.found) {
       sodInfo.innerHTML = `
-        <p><span class="font-semibold">SOD ID:</span> ${sodData.sod_id}</p>
+        <p><span class="font-semibold">SOD ID:</span> <span class="mono">${sodData.sod_id}</span></p>
         <p><span class="font-semibold">Project:</span> ${sodData.p_id}</p>
-        <p><span class="font-semibold">Rig:</span> ${sodData.rig_id || 'N/A'}</p>
-      `;
+        <p><span class="font-semibold">Rig:</span> ${sodData.rig_id || 'N/A'}</p>`;
 
-      // Split the sites from the SOD and generate blocks
       if (sodData.site_ids) {
         siteIdsArray = sodData.site_ids.split(',').map(s => s.trim()).filter(s => s);
-        
-        let htmlBlocks = '';
-        siteIdsArray.forEach((siteId, index) => {
-          htmlBlocks += generateSiteBlock(siteId, globalWorkTypes, index);
-        });
-        container.innerHTML = htmlBlocks;
+        container.innerHTML = siteIdsArray.map((id, i) => generateSiteBlock(id, globalWorkTypes, i)).join('');
+        wireAutoSave();
+        if (draft) applyDraft(draft);
       } else {
-         container.innerHTML = `<p class="text-red-600 text-sm">No sites found in today's SOD.</p>`;
+        container.innerHTML = '<p class="text-red-600 text-sm">No sites found in today\'s SOD.</p>';
       }
-
     } else {
-      sodInfo.innerHTML = `<p class="text-red-600 font-medium">⚠️ ${sodData.message || 'No SOD found for today.'}</p>`;
+      sodInfo.innerHTML = `<p class="text-red-600 font-medium">⚠️ ${(sodData && sodData.message) || 'No SOD found for today. Please complete SOD first.'}</p>`;
       document.getElementById('submit-btn').disabled = true;
     }
 
     document.getElementById('loading-overlay').classList.add('hidden');
+    if (isOnline) flushQueue();
   } catch (e) {
     document.getElementById('loading-overlay').classList.add('hidden');
     showError('Failed to load form data. Check your connection and reload.');
-    console.error(e);
   }
 }
 
-// GPS Helper
-function getGPS() {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) resolve(""); 
-    else {
-      navigator.geolocation.getCurrentPosition(
-        (position) => resolve(`${position.coords.latitude}, ${position.coords.longitude}`),
-        (error) => resolve("") 
-      );
-    }
-  });
-}
-
-document.getElementById('eod-form').addEventListener('submit', async (e) => {
+// ─── Submit ────────────────────────────────────────────────────────────────────
+document.getElementById('eod-form').addEventListener('submit', async e => {
   e.preventDefault();
   const btn = document.getElementById('submit-btn');
   const btnText = document.getElementById('btn-text');
   document.getElementById('error-banner').classList.add('hidden');
 
-  // Collect Global Data
   const eq_yn = (document.querySelector('input[name="equipment_issue_yn"]:checked') || {}).value || 'NO';
   const equipment_issue = eq_yn === 'YES';
   const issue_rig_id = document.getElementById('issue_rig_id').value.trim();
@@ -275,7 +447,6 @@ document.getElementById('eod-form').addEventListener('submit', async (e) => {
 
   if (equipment_issue && !issue_rig_id) return showError('Please enter the equipment ID for the issue.');
 
-  // Collect Data from Dynamic Site Blocks
   let sitesData = [];
   let validationError = false;
 
@@ -285,42 +456,32 @@ document.getElementById('eod-form').addEventListener('submit', async (e) => {
     const units = parseFloat(block.querySelector('.site-units').value);
     const hours = parseFloat(block.querySelector('.site-hours').value);
     const delay = block.querySelector('.site-delay').value;
-
-    if (!work_type || isNaN(units) || isNaN(hours)) {
-      validationError = true;
-    }
-
-    sitesData.push({
-      s_id: site_id,
-      work_type: work_type,
-      units_completed: units,
-      hours_spent: hours,
-      delay_category: delay
-    });
+    if (!work_type || isNaN(units) || isNaN(hours)) validationError = true;
+    sitesData.push({ s_id: site_id, work_type, units_completed: units, hours_spent: hours, delay_category: delay });
   });
 
-  if (validationError) {
-    return showError('Please complete all required fields for every site.');
-  }
+  if (validationError) return showError('Please complete all required fields for every site.');
 
   btn.disabled = true;
   btnText.textContent = 'Getting Location...';
-
   const submission_gps = await getGPS();
-
   btnText.textContent = 'Submitting...';
 
-  // The final payload packages everything together
   const payload = {
-    chat_id: CHAT_ID,
-    submitter_ref,
-    submission_gps,
-    equipment_issue,
-    issue_rig_id: equipment_issue ? issue_rig_id : '',
+    chat_id: CHAT_ID, submitter_ref, submission_gps,
+    equipment_issue, issue_rig_id: equipment_issue ? issue_rig_id : '',
     issue_note: equipment_issue ? issue_note : '',
-    narrative_notes,
-    sites_data: sitesData // This is an array of objects
+    narrative_notes, sites_data: sitesData,
+    confirm_email: CONFIRM_EMAIL
   };
+
+  if (!isOnline) {
+    queuePayload(payload);
+    clearDraft();
+    document.getElementById('success-msg').textContent = 'Saved offline. Will submit automatically when back online.';
+    document.getElementById('success-screen').classList.remove('hidden');
+    return;
+  }
 
   try {
     const res = await fetch(EOD_ENDPOINT, {
@@ -328,18 +489,19 @@ document.getElementById('eod-form').addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
     if (!res.ok) throw new Error(`Server error ${res.status}`);
-
+    clearDraft();
     document.getElementById('success-msg').textContent = `Successfully logged data for ${sitesData.length} site(s).`;
     document.getElementById('success-screen').classList.remove('hidden');
   } catch (err) {
-    btn.disabled = false;
-    btnText.textContent = 'Submit EOD Report';
-    showError(`Submission failed: ${err.message}. Please try again.`);
+    queuePayload(payload);
+    clearDraft();
+    document.getElementById('success-msg').textContent = 'Saved offline. Will submit automatically when back online.';
+    document.getElementById('success-screen').classList.remove('hidden');
   }
 });
 
+updateNetworkUI();
 init();
 </script>
 </body>
